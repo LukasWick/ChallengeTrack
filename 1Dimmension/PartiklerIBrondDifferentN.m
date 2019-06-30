@@ -1,11 +1,11 @@
 clear all; close all;clc;
-numberOfPoints = 400;
-NumberOfPlots = 40
+numberOfPoints = 500;
+NumberOfPlots = 19;
 
 syms t u v
 % r = [cos(t);sin(t);z]
 x = u;
-y = u*eps^3;
+y = u;
 z = v;
 
 r(u,v) = [x;y;z];
@@ -40,10 +40,10 @@ U = simplify(1/4*(k1-k2)^2);
 % N = NumberOfPoints; %number of simulated points minus 2 
 
 g = [-E,-F;-F,-G];
-us = linspace(-pi,pi,numberOfPoints+1); % Her tages det sidste punkt med til plots. Det gør us n+1 lang
-
+width = pi/sqrt(2)
+us = linspace(-width,width,numberOfPoints+2); % Ekstra punkt i hver ende
 Ufun = matlabFunction(U);
-Us = Ufun(us).*ones(size(us));
+Us = Ufun(us(:)).*ones(size(us(:)));
 
 figure
 rFun = matlabFunction(r);
@@ -71,55 +71,57 @@ du = us(2)-us(1);
 
 g1 = det(g);
 
+% g = matlabFunction(g+eps^3*(u));
 gdu = matlabFunction(simplify(diff(g1,u))+eps^3*(u));
 gI = matlabFunction(g1^-1+eps^3*(u));
+% dgIu = matlabFunction(simplify(diff(gI,u))+eps^3*(u));
 for K = 2:(n-1)
-    gNum = gI(us(K));
-    guNum = gdu(us(K));
+    gNum = gI(us(K+1));
+    guNum = gdu(us(K+1));
 
     
     M(K,K-1) =  -gNum/(du^2) - 1/(4*du)*gNum.^2*guNum;
-    M(K,K)   = 2*gNum/(du^2)-Us(K);
+    M(K,K)   = 2*gNum/(du^2)-Us(K+1);
     M(K,K+1) =  -gNum/(du^2) + 1/(4*du)*gNum.^2*guNum;
 end
 
-gNum = gI(us(1));
-guNum = gdu(us(1));
-M(1,n)   =  -gNum/(du^2) - 1/(4*du)*gNum.^2*guNum; 
-M(1,1)   = 2*gNum/(du^2)-Us(1);
+gNum = gI(us(1+1));
+guNum = gdu(us(1+1));
+% M(1,n)   =  -gNum/(du^2) - 1/(4*du)*gNum.^2*guNum; 
+M(1,1)   = 2*gNum/(du^2)-Us(1+1);
 M(1,1+1) =  -gNum/(du^2) + 1/(4*du)*gNum.^2*guNum;
     
-gNum = gI(us(n));
-guNum = gdu(us(n));
+gNum = gI(us(n+1));
+guNum = gdu(us(n+1));
 M(n,n-1) =  -gNum/(du^2) - 1/(4*du)*gNum.^2*guNum; 
-M(n,n)   = 2*gNum/(du^2)-Us(n);
-M(n,1)   =  -gNum/(du^2) + 1/(4*du)*gNum.^2*guNum;
+M(n,n)   = 2*gNum/(du^2)-Us(n+1);
+% M(n,1)   =  -gNum/(du^2) + 1/(4*du)*gNum.^2*guNum;
 
-figure
-surf(M)
+% figure
+% surf(M)
 [V,D] = eigs(M,NumberOfPlots,'sr');
 [E,I] = sort(diag(D));
 
-%% E= k^2 = (2pi/lambda)^2= (2pi/(pi*sqrt(2)))^2 = 2
-
 %% plot
-for i  = 1  
+for i =1:3
     figure
     hold on
     set(gca,'FontSize',15) 
 
-%     psi2 = conj(V(:,I(i))).*V(:,I(i));
-    psi2 = V(:,I(i));
-    psii = [psi2;psi2(1)];
-
-%     plot(xs,ys)
-%     hold on
-%     plot3(xs,ys,psii)
+    psi2 = conj(V(:,I(i))).*V(:,I(i));
+    psii = [0;psi2;0];
+    plot(xs,ys)
+    hold on
+    plot3(xs,ys,psii)
 
     title(['Energy nr: ' num2str(i) ' of E= ' num2str(E(i))])
-%     xlabel('x')
-%     ylabel('y')
-%     figure
+    xlabel('x')
+    ylabel('y')
+    figure
+    hold on
+    title(['Energy nr: ' num2str(i) ' of E= ' num2str(E(i))])
+    set(gca,'FontSize',15) 
+
     plot(us,psii)
 end
 
@@ -127,21 +129,18 @@ end
 figure
 title(['Expected energy versus found energy'])
 hold on
-ns = [1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24]-1
-nss = linspace(0,(NumberOfPlots-1)/2,100)
-plot(nss,nss.^2)
+ns = 1:NumberOfPlots
+nss = linspace(0,NumberOfPlots,100)
+plot(nss,1/4.*nss.^2)
 for i =1:NumberOfPlots
     hold on
     plot(ns(i),E(i),'.k','Markersize',10)
 end
 legend('Expected','Found','Location','Northwest')
 set(gca,'FontSize',15) 
+
+
 %%
-% figure
-% histogram(E'./(ns(1:NumberOfPlots).^2))
-% %%
-% figure
-% plot(ns(1:NumberOfPlots),E'./(ns(1:NumberOfPlots)),'.')
 error = ns(1:NumberOfPlots).^2-E'
 figure
 plot(ns(1:NumberOfPlots),error,'.')
@@ -150,18 +149,4 @@ figure
 plot(ns(1:NumberOfPlots),error./ns(1:NumberOfPlots).^2,'.')
 figure
 histogram(error./ns(1:NumberOfPlots).^2)
-
-%%
-figure
-plot(ns(1:NumberOfPlots),error./ns(1:NumberOfPlots).^2)
-
-title('Reltative error for excitation loop')
-set(gca,'FontSize',14) 
-xlabel('Quantum number n')
-ylabel('Error: \DeltaE/E_{teo}')
-% xlim([0,40])
-% ylim([-3.5,0.05])
-grid on
-
-
 

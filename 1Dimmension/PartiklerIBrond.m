@@ -1,11 +1,11 @@
 clear all; close all;clc;
 numberOfPoints = 500;
-NumberOfPlots = 10;
+NumberOfPlots = 40;
 
 syms t u v
 % r = [cos(t);sin(t);z]
 x = u;
-y = u*eps^3;
+y = u;
 z = v;
 
 r(u,v) = [x;y;z];
@@ -40,7 +40,8 @@ U = simplify(1/4*(k1-k2)^2);
 % N = NumberOfPoints; %number of simulated points minus 2 
 
 g = [-E,-F;-F,-G];
-us = linspace(-pi,pi,numberOfPoints+2); % Ekstra punkt i hver ende
+width = pi/sqrt(2)
+us = linspace(-width,width,numberOfPoints+2); % Ekstra punkt i hver ende
 Ufun = matlabFunction(U);
 Us = Ufun(us(:)).*ones(size(us(:)));
 
@@ -102,11 +103,13 @@ M(n,n)   = 2*gNum/(du^2)-Us(n+1);
 [E,I] = sort(diag(D));
 
 %% plot
-for i =1:3
+for i =1:1
     figure
+    hold on
+    set(gca,'FontSize',15) 
+
     psi2 = conj(V(:,I(i))).*V(:,I(i));
     psii = [0;psi2;0];
-
     plot(xs,ys)
     hold on
     plot3(xs,ys,psii)
@@ -115,7 +118,50 @@ for i =1:3
     xlabel('x')
     ylabel('y')
     figure
+    hold on
+    title(['Energy nr: ' num2str(i) ' of E= ' num2str(E(i))])
+    set(gca,'FontSize',15) 
+
     plot(us,psii)
 end
+
+%%
+figure
+title(['Expected energy versus found energy'])
+hold on
+ns = 1:NumberOfPlots
+nss = linspace(0,NumberOfPlots,100)
+plot(nss,1/4.*nss.^2)
+for i =1:NumberOfPlots
+    hold on
+    plot(ns(i),E(i),'.k','Markersize',10)
+end
+legend('Expected','Found','Location','Northwest')
+set(gca,'FontSize',15) 
+
+
+%%
+error = 1/4.*ns(1:NumberOfPlots).^2-E'
+figure
+plot(ns(1:NumberOfPlots),error,'.')
+ 
+figure 
+plot(ns(1:NumberOfPlots),error./(1/4.*ns(1:NumberOfPlots).^2),'.')
+figure
+histogram(error./(1/4.*ns(1:NumberOfPlots).^2))
+
+%%
+error = 1/4.*ns(1:NumberOfPlots).^2-E'
+figure
+plot(ns(1:NumberOfPlots),error./(1/4.*ns(1:NumberOfPlots).^2),'-')
+
+title('Reltative error for excitation well')
+set(gca,'FontSize',14) 
+xlabel('Quantum number n')
+ylabel('Error: \DeltaE/E_{teo}')
+% xlim([0,40])
+% ylim([-3.5,0.05])
+grid on
+
 
 

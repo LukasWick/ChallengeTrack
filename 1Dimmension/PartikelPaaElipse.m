@@ -1,11 +1,13 @@
-% clear all; close all;clc;
-numberOfPoints = 200;
-NumberOfPlots = 10
+clear all; close all;clc;
+numberOfPoints = 400;
+NumberOfPlots = 2
 
 syms t u v
 % r = [cos(t);sin(t);z]
+parameter = linspace(1.1,10,5)
+for ind = 1:length(parameter)
 x = 100*cos(u);
-y = 200*sin(u);
+y = parameter(ind)*100*sin(u);
 z = v;
 
 r(u,v) = [x;y;z];
@@ -45,24 +47,24 @@ us = linspace(-pi,pi,numberOfPoints+1); % Her tages det sidste punkt med til plo
 Ufun = matlabFunction(U);
 Us = Ufun(us(:)).*ones(size(us(:)));
 
-figure
+% figure
 rFun = matlabFunction(r);
 rs = rFun(us,zeros(size(us)));
 xs = rs(1,:);
 ys = rs(2,:);
-plot(xs,ys)
-axis equal
-title('The elipse') % Titel på plot
-xlabel('x') % Navn på x-akse
-ylabel('y') % Navn på y-akse
-hold on 
-plot3(xs,ys,Us)
+% plot(xs,ys)
+% axis equal
+% title('The elipse') % Titel på plot
+% xlabel('x') % Navn på x-akse
+% ylabel('y') % Navn på y-akse
+% hold on 
+% plot3(xs,ys,Us)
 
-figure
-title('"Energy"') % Titel på plot
-xlabel('theta') % Navn på x-akse
-ylabel('U') % Navn på y-akse
-plot(us,Us)
+% figure
+% title('"Energy"') % Titel på plot
+% xlabel('theta') % Navn på x-akse
+% ylabel('U') % Navn på y-akse
+% plot(us,Us)
 
 n = numberOfPoints;
 M = sparse(zeros(n,n));
@@ -97,9 +99,10 @@ M(n,n-1) =  -gNum/(du^2) - 1/(4*du)*gNum.^2*guNum;
 M(n,n)   = 2*gNum/(du^2)-Us(n);
 M(n,1)   =  -gNum/(du^2) + 1/(4*du)*gNum.^2*guNum;
 
-figure
-surf(M)
-[V,D] = eigs(M,NumberOfPlots,'sr');
+% figure
+% surf(M)
+opts.tol = 1e-14
+[V,D] = eigs(M,NumberOfPlots,'sr',opts);
 [E,I] = sort(diag(D));
 
 %% plot
@@ -118,8 +121,8 @@ for i =1:1
     figure
     plot(us,psii)
 end
-
-
+Esave(ind,:) = E'
+end
 
 % M = zeros(n-1);
 % M(1,n-1) = -gf(theta(n-1))/dT^2;
