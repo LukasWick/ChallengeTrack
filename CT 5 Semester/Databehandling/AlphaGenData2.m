@@ -1,18 +1,56 @@
 clc; clear all; close all;
+%%
+alphaSet = 0.1
+stoj = 1e-3
+T = 0.2500;
+n = 60;
+v0 = 2.3
+accWidth = 3
+acc_n = 5
+ns = 6:11;
+number_ofmeasurements = 1
 
-A=load('drag.txt');
-t=A(:,1)/8;
-x=A(:,2);
-y=A(:,3);
-dt = 1/240;
-t = dt.*(1:length(t));
-t = t';
+
+alpha = []
+for LongIndex = 1:number_ofmeasurements
+times = linspace(0,T,n);
+dat0 = [0;v0];
+
+acc_points = normrnd(0,accWidth,[acc_n,1]);
+acc_points_x =linspace(0,T*dat0(2),acc_n);%[-0.2;-0.1;rand([3,1])*T*dat0(2)/2+T*dat0(2)/2,;T*dat0(2)+[0.1;0.2]];
+accFun = @(x) spline(acc_points_x,acc_points,x);
+
+
+[t,dat] = ode45(@(t,dat) diffFun(t,dat,accFun,alphaSet),times,dat0);
+xs = dat(:,1);
+vs = dat(:,2);
+
+%%
+% figure
+% plot(xs,accFun(xs))
+% hold on 
+% plot(acc_points_x,acc_points,'.')
+
+
+dat0 = [xs(end);-vs(end)];
+
+[temp,dat] = ode45(@(t,dat) diffFun(t,dat,accFun,alphaSet),times,dat0);
+t = [t;t(end)+temp];
+xs = [xs;dat(:,1)];
+vs = [vs;dat(:,2)];
+
+
+%%
+t=t;
+x=xs+normrnd(0,stoj,size(t));
+y=zeros(size(t))+normrnd(0,stoj,size(t));
+
 % plot3(x,y,1:length(x))
 % Define bounderys 
-i1 = [1,63];
-i2 = [61,139];
+i1 = [1,61];
+i2 = [59,120];
 
-dt = 1/240
+dt = 1/240;
 t1= (t(i1(1):i2(1))-t(i1(1)));
 t1 = dt.*(1:length(t1));
 t1 = t1';
@@ -25,10 +63,8 @@ t2 = t2';
 x2=x(i1(2):i2(2));
 y2=y(i1(2):i2(2));
 
-ns = [9]
-alpha = []
 for iindex = 1:length(ns)
-n_poly = ns(iindex)
+n_poly = ns(iindex);
 
 
 Rfun=@(a,x)a(1);
@@ -42,21 +78,21 @@ for i=2:n_poly
 ddRfun=@(a,x) ddRfun(a,x)+i*(i-1)*a(i+1)*x.^(i-2);
 end
 
-linFun = @(a,t) a(1)+a(2).*t
+linFun = @(a,t) a(1)+a(2).*t;
 
-linBetaX1 = nlinfit(t1,x1,linFun,[1,1])
-linBetaX2 = nlinfit(t2,x2,linFun,[1,1])
+linBetaX1 = nlinfit(t1,x1,linFun,[1,1]);
+linBetaX2 = nlinfit(t2,x2,linFun,[1,1]);
 
-deltaX1 = x1 - linFun(linBetaX1,t1)
-deltaX2 = x2 - linFun(linBetaX2,t2)
+deltaX1 = x1 - linFun(linBetaX1,t1);
+deltaX2 = x2 - linFun(linBetaX2,t2);
 
 betaX1=nlinfit(t1,deltaX1,@(a,t)Rfun(a,t),ones(1,n_poly+1));
 betaX2=nlinfit(t2,deltaX2,@(a,t)Rfun(a,t),ones(1,n_poly+1));
 
-x1Fit =@(t) linFun(linBetaX1,t)+Rfun(betaX1,t)
-x2Fit =@(t) linFun(linBetaX2,t)+Rfun(betaX2,t)
-v1Fit =@(t) linBetaX1(2)+dRfun(betaX1,t)
-v2Fit =@(t) linBetaX2(2)+dRfun(betaX2,t)
+x1Fit =@(t) linFun(linBetaX1,t)+Rfun(betaX1,t);
+x2Fit =@(t) linFun(linBetaX2,t)+Rfun(betaX2,t);
+v1Fit =@(t) linBetaX1(2)+dRfun(betaX1,t);
+v2Fit =@(t) linBetaX2(2)+dRfun(betaX2,t);
 
 timelengt = 1000;
 ts1 = linspace(t1(1),t1(end),1000);
@@ -66,7 +102,7 @@ end
 
 Alpha = -(ddRfun(betaX2,ts2)-ddRfun(betaX1,ts1))./(v1Fit(ts1)-v2Fit(ts2));
 
-% x,y plot
+%% x,y plot
 figure
 hold on 
 title(['Path on table '])
@@ -131,9 +167,15 @@ ylabel('a [m/s^2]')
 set(gca,'fontsize',15)
 plot(x1Fit(ts1),ddRfun(betaX1,ts1))
 plot(x2Fit(ts2),ddRfun(betaX2,ts2))
-legend('Fit 1','Fit 2')
+plot(x1Fit(ts1),accFun(x1Fit(ts1)))
+
+legend('Fit 1','Fit 2','Model')
 
 %% x,alpha plot
+lenA = length(Alpha);
+ALPHA = Alpha(lenA/10:(end-lenA/10));
+xs = x1Fit(ts1);
+XS = xs(lenA/10:(end-lenA/10));
 figure
 hold on 
 title(['Alpha as function of position'])
@@ -141,8 +183,7 @@ xlabel('x [m]')
 ylabel('\alpha [1/s]')
 set(gca,'fontsize',15)
 % plot(Rfun(betaX1,ts1),Alpha)
-xs= Rfun(betaX1,ts1);
-plot(x1Fit(ts1),Alpha)
+plot(XS,ALPHA)
 
 %% alpha histogram
 figure
@@ -150,25 +191,17 @@ hold on
 title(['Histogram of Alpha'])
 xlabel('\alpha [1/s]')
 set(gca,'fontsize',15)
-histogram(Alpha,100)
-[N,E] = histcounts(Alpha,100)
+histogram(ALPHA,100)
+[N,E] = histcounts(ALPHA,100)
 edges = E(1:(end-1))+diff(E)/2
-edges = [edges,edges+edges(end)-edges(1)]
-N = [N,zeros(size(N))]
-
-edges = edges(50:(end-50))
-N = N(50:(end-50))
-% plot(edges,N,'.')
+plot(edges,N,'.')
 gauss = @(beta,x) beta(1).*exp(-((x-beta(2))./beta(3)).^2./2)
 beta = nlinfit(edges,N,gauss,[max(N),0,2])
 plot(edges,gauss(beta,edges))
 legend('Alpha his',['Gausfit \alpha = ',num2str(beta(2))])
 
-%%
-lenA = length(Alpha);
-ALPHA = Alpha(lenA/10:(end-lenA/10));
-
-alpha(iindex,:)=ALPHA;
+ alpha(end+1,:)=ALPHA;
+end
 end
 figure
 hold on 
@@ -212,3 +245,15 @@ ci = nlparci(beta,R,'jacobian',J);
 % 
 alp = beta(2)
 alpUs = norm((ci(2,1)-ci(2,2)))/2
+% 
+
+%%
+
+function dDat = diffFun(t,dat,accFun,alpha)
+x = dat(1);
+v = dat(2);
+dxdt = v;
+dvdt = accFun(x)-alpha*v;
+dDat = [dxdt;dvdt];
+end
+

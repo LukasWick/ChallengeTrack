@@ -1,0 +1,47 @@
+% clc; clear all; close all;
+alpha = 0
+
+
+t = 0.2500;
+n = 60;
+times = linspace(0,t,n);
+dat0 = [0;2.3];
+
+
+acc_points = [0;0;normrnd(0,2,[3,1]);0;0];
+acc_points_x = [-0.2;-0.1;rand([3,1])*t*dat0(2)/2+t*dat0(2)/2,;t*dat0(2)+[0.1;0.2]];
+accFun = @(x) spline(acc_points_x,acc_points,x);
+
+
+[t,dat] = ode45(@(t,dat) diffFun(t,dat,accFun,alpha),times,dat0);
+xs = dat(:,1);
+vs = dat(:,2);
+
+dat0 = [0;-2.3];
+
+[t,dat] = ode45(@(t,dat) diffFun(t,dat,accFun,alpha),times,dat0);
+
+
+
+
+xs = dat(:,1);
+vs = dat(:,2);
+%%
+figure
+plot(t,xs)
+figure 
+plot(t,vs)
+figure
+plot(x,accFun(x))
+hold on 
+plot(acc_points_x,acc_points,'.')
+%%
+
+function dDat = diffFun(t,dat,accFun,alpha)
+x = dat(1);
+v = dat(2);
+dxdt = v;
+dvdt = accFun(x)-alpha*v;
+dDat = [dxdt;dvdt];
+end
+

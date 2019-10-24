@@ -2,8 +2,6 @@ clc; clear all; close all;
 
 n_poly = 9
 
-
-
 A=load('drag.txt');
 t=A(:,1)/8;
 x=A(:,2);
