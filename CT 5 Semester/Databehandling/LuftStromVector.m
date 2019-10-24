@@ -8,7 +8,7 @@ filenames = {'data.txt','data2_drag.txt'};
 t = [];
 x = [];
 y = [];
-normaliseringsfactor =[1,8]
+normaliseringsfactor =[1/8,1]
 figure
 for i = 1:2
     fileID = fopen(filenames{i},'r');
@@ -71,7 +71,7 @@ xlim([xmin,xmax])
 ylim([ymin,ymax])
 
 
-N=6
+N=4
 dx = (xmax-xmin)/N
 dy = (ymax-ymin)/N
 luftmodstand =0
@@ -110,6 +110,9 @@ end
 figure
 [xs,ys] = meshgrid(Xs,Ys);
 quiver(xs,ys,fieldX,fieldY)
+
+A = sqrt(fieldX.^2+fieldY.^2);
+Amax = max(max(A))
 %%
 
 % alphaX = fzero(@(alpha)mean((d2xdt2-alpha.*dxdt).*dxdt),0.1)
