@@ -8,29 +8,19 @@ dat0 = [0;2.3];
 
 acc_n = 5
 acc_points = normrnd(0,3,[acc_n,1]);
-acc_points_x =linspace(0,T*dat0(2),acc_n);%[-0.2;-0.1;rand([3,1])*T*dat0(2)/2+T*dat0(2)/2,;T*dat0(2)+[0.1;0.2]];
+acc_points_x =linspace(0,T*dat0(2),acc_n)%[-0.2;-0.1;rand([3,1])*T*dat0(2)/2+T*dat0(2)/2,;T*dat0(2)+[0.1;0.2]];
 accFun = @(x) spline(acc_points_x,acc_points,x);
 
-figure(1)
-plot(acc_points_x,acc_points,'*')
-hold on
-plot(xs,accFun(xs))
-
-
+plot 
 [t,dat] = ode45(@(t,dat) diffFun(t,dat,accFun,alpha),times,dat0);
 xs = dat(:,1);
 vs = dat(:,2);
 
-for i = 1:length(acc_points_x) 
-    acc_points(i) =acc_points(i)+ normrnd(0,(1-acc_points_x(i)/(T*dat0(2)))*3/1)
-end
-accFun = @(x) spline(acc_points_x,acc_points,x);
-
 dat0 = [xs(end);-vs(end)];
-
+acc_points_x = linspace(0,T*dat0(2),acc_n)
 
 [temp,dat] = ode45(@(t,dat) diffFun(t,dat,accFun,alpha),times,dat0);
-t = [t;t(end)+temp];
+t = [t;t(end)+temp]
 xs = [xs;dat(:,1)];
 vs = [vs;dat(:,2)];
 
@@ -39,10 +29,10 @@ figure
 plot(t,xs)
 figure 
 plot(t,vs)
-figure(1)
+figure
 plot(xs,accFun(xs))
 hold on 
-plot(acc_points_x,acc_points,'*')
+plot(acc_points_x,acc_points,'.')
 %%
 
 function dDat = diffFun(t,dat,accFun,alpha)

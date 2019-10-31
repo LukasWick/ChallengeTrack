@@ -1,4 +1,4 @@
-clc; clear all; close all;
+clc; clear all;% close all;
 
 A=load('drag.txt');
 t=A(:,1)/8;
@@ -25,7 +25,7 @@ t2 = t2';
 x2=x(i1(2):i2(2));
 y2=y(i1(2):i2(2));
 
-ns = [9]
+ns = 9:11;
 alpha = []
 for iindex = 1:length(ns)
 n_poly = ns(iindex)
@@ -66,7 +66,7 @@ end
 
 Alpha = -(ddRfun(betaX2,ts2)-ddRfun(betaX1,ts1))./(v1Fit(ts1)-v2Fit(ts2));
 
-% x,y plot
+x,y plot
 figure
 hold on 
 title(['Path on table '])
@@ -170,14 +170,14 @@ ALPHA = Alpha(lenA/10:(end-lenA/10));
 
 alpha(iindex,:)=ALPHA;
 end
-figure
-hold on 
-title(['Alpha as function of position'])
-xlabel('x [m]')
-ylabel('\alpha [1/s]')
-set(gca,'fontsize',15)
-% plot(Rfun(betaX1,ts1),Alpha)
-plot(alpha')
+% figure
+% hold on 
+% title(['Alpha as function of position'])
+% xlabel('x [m]')
+% ylabel('\alpha [1/s]')
+% set(gca,'fontsize',15)
+% % plot(Rfun(betaX1,ts1),Alpha)
+% plot(alpha')
 
 %% alpha histogram
 figure
@@ -206,9 +206,9 @@ plot(edges,gauss([dE(1)*1/sqrt(2*pi*alphaFoundStd^2),alphaFound,alphaFoundStd],e
 [beta,R,J,CovB,MSE,ErrorModelInfo] = nlinfit(edges,N,gauss,[dE(1)*1/sqrt(2*pi*alphaFoundStd^2),alphaFound,alphaFoundStd])
 plot(edges,gauss(beta,edges))
 % plot(edges,N)
-legend('Alpha his',['mean \alpha = ',num2str(alphaFound)],['gausfit \alpha = ',num2str(beta(2))])
-
 ci = nlparci(beta,R,'jacobian',J);
 % 
 alp = beta(2)
 alpUs = norm((ci(2,1)-ci(2,2)))/2
+legend('Alpha his',['mean \alpha = ',num2str(alphaFound)],['gausfit \alpha = ',num2str(beta(2)),'+-',num2str(alpUs)])
+
