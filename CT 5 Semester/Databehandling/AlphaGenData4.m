@@ -1,27 +1,23 @@
 clc; clear all; close all;
 %%
-alphaSet = 0.1
-stoj = 1e-3
-T = 0.2500;
+alphaSet = 0.10;
+stoj = 1e-3;
 
+l = 0.6;
 fps = 240;
 v0 = 2.3
-accWidth = 3
-changeInAcc = 0.05
+accWidth = 1
+changeInAcc = 0.01
 acc_n = 5
-ns = 7:10;
-number_ofmeasurements = 1
+ns = 5:9;
+number_ofmeasurements = 1;
 
-
+T = 0.2500;
 n = round(T*fps);
-alpha = []
+alpha = [];
 %Genner punkter accelerationskurven følger
 acc_points = normrnd(0,accWidth,[acc_n,1]);
 
-SPEEDS1 = []
-SPEEDS2 = []
-ACC1 = []
-ACC2 = []
 for LongIndex = 1:number_ofmeasurements
 times = linspace(0,T,n);
 
@@ -99,13 +95,14 @@ ddRfun=@(a,x) ddRfun(a,x)+i*(i-1)*a(i+1)*x.^(i-2);
 end
 
 linFun = @(a,t) a(1)+a(2).*t;
+disp('Her?')
 
 linBetaX1 = nlinfit(t1,x1,linFun,[1,1]);
 linBetaX2 = nlinfit(t2,x2,linFun,[1,1]);
 
 deltaX1 = x1 - linFun(linBetaX1,t1);
 deltaX2 = x2 - linFun(linBetaX2,t2);
-
+disp('Eller Her?')
 betaX1=nlinfit(t1,deltaX1,@(a,t)Rfun(a,t),ones(1,n_poly+1));
 betaX2=nlinfit(t2,deltaX2,@(a,t)Rfun(a,t),ones(1,n_poly+1));
 
@@ -120,15 +117,10 @@ for i = 1:timelengt
    ts2(i) = fzero(@(t2) x1Fit(ts1(i))-x2Fit(t2),ts1(max(1,length(ts1)-i)));     
 end
 
-Alpha = -(ddRfun(betaX2,ts2)-ddRfun(betaX1,ts1))./(v1Fit(ts1)-v2Fit(ts2));
+Alpha = -(ddRfun(betaX1,ts1)-ddRfun(betaX2,ts2))./(v1Fit(ts1)-v2Fit(ts2));
 lenA = length(Alpha);
 ALPHA = Alpha(lenA/10:(end-lenA/10));
 alpha(end+1,:)=ALPHA;
-
-SPEEDS1(end+1,:) = v1Fit(ts1)
-SPEEDS2(end+1,:) = v2Fit(ts2)
-ACC1(end+1,:) = ddRfun(betaX1,ts1)
-ACC2(end+1,:) = ddRfun(betaX2,ts2)
 
 %% x,y plot
 figure
@@ -281,31 +273,6 @@ legend('Alpha his',['mean \alpha = ',num2str(alphaFound)],['gausfit \alpha = ',n
 
 
 
-%%
-figure
-Alpha = -(as(62:end)-flip(as(1:59)))./(flip(vs(1:59))-vs(62:end));
-plot(Alpha)
-%%
-figure
-plot(vs(62:end))
-hold on
-plot(flip(vs(1:59)))
-
-figure
-plot(as(62:end))
-hold on
-plot(flip(as(1:59)))
-%%
-figure
-plot(vs(62:end))
-hold on
-plot(flip(vs(1:59)))
-
-figure
-plot(as(62:end))
-hold on
-plot(flip(as(1:59)))
-%%
 function dDat = diffFun(t,dat,accFun,alpha)
 x = dat(1);
 v = dat(2);

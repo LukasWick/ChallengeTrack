@@ -1,18 +1,79 @@
 clc; clear all; close all;
+%%
+alphaSet = 0.1
+stoj = 1e-3
+T = 0.2500;
 
-A=load('drag.txt');
-t=A(:,1)/8;
-x=A(:,2);
-y=A(:,3);
-dt = 1/240;
-t = dt.*(1:length(t));
-t = t';
+fps = 240;
+v0 = 2.3
+accWidth = 3
+changeInAcc = 0.05
+acc_n = 5
+ns = 7:10;
+number_ofmeasurements = 1
+
+
+n = round(T*fps);
+alpha = []
+%Genner punkter accelerationskurven følger
+acc_points = normrnd(0,accWidth,[acc_n,1]);
+
+
+XSS1 = []
+XSS2 = []
+SPEEDS1 = []
+SPEEDS2 = []
+ACC1 = []
+ACC2 = []
+for LongIndex = 1:number_ofmeasurements
+times = linspace(0,T,n);
+
+dat0 = [0;v0]; %x0;v0
+xmax = T*dat0(2);
+acc_points_x =linspace(0,xmax,acc_n);
+
+
+% Ændre en lille smule på accelerationen (mere jo længere fra stød kanten)
+for i = 1:length(acc_points_x) 
+    acc_points(i) =acc_points(i)+ normrnd(0,(1-acc_points_x(i)/(T*dat0(2)))*accWidth*changeInAcc);
+end
+accFun = @(x) spline(acc_points_x,acc_points,x);
+
+%Løs diff ud
+[t,dat] = ode45(@(t,dat) diffFun(t,dat,accFun,alphaSet),times,dat0);
+Xs = dat(:,1);
+vs = dat(:,2);
+
+acc_points_back = zeros(size(acc_points));
+
+% Ændre en lille smule på accelerationen (mere jo længere fra stød kanten)
+for i = 1:length(acc_points_x) 
+    acc_points_back(i) =acc_points(i)+ normrnd(0,(1-acc_points_x(i)/(T*dat0(2)))*accWidth*changeInAcc);
+end
+accFun_back = @(x) spline(acc_points_x,acc_points_back,x);
+
+%Nye startbetingerlser
+dat0 = [Xs(end);-vs(end)];
+
+
+%
+[temp,dat] = ode45(@(t,dat) diffFun(t,dat,accFun_back,alphaSet),times,dat0);
+t = [t;2*t(end)-t(end-1)+temp];
+Xs = [Xs;dat(:,1)];
+vs = [vs;dat(:,2)];
+as = gradient(vs,1/fps)
+
+%%
+t=t;
+x=Xs+normrnd(0,stoj,size(t));
+y=[t*v0/10]+normrnd(0,stoj,size(t));
+
 % plot3(x,y,1:length(x))
 % Define bounderys 
-i1 = [1,63];
-i2 = [61,139];
+i1 = [1,61];
+i2 = [59,120];
 
-dt = 1/240
+dt = 1/240;
 t1= (t(i1(1):i2(1))-t(i1(1)));
 t1 = dt.*(1:length(t1));
 t1 = t1';
@@ -25,8 +86,6 @@ t2 = t2';
 x2=x(i1(2):i2(2));
 y2=y(i1(2):i2(2));
 
-ns = 9;
-alpha = []
 for iindex = 1:length(ns)
 n_poly = ns(iindex);
 
@@ -64,10 +123,18 @@ for i = 1:timelengt
    ts2(i) = fzero(@(t2) x1Fit(ts1(i))-x2Fit(t2),ts1(max(1,length(ts1)-i)));     
 end
 
-Alpha = -(ddRfun(betaX1,ts1)-ddRfun(betaX2,ts2))./(v1Fit(ts1)-v2Fit(ts2));
+Alpha = -(ddRfun(betaX2,ts2)-ddRfun(betaX1,ts1))./(v1Fit(ts1)-v2Fit(ts2));
 lenA = length(Alpha);
 ALPHA = Alpha(lenA/10:(end-lenA/10));
 alpha(end+1,:)=ALPHA;
+
+
+XSS1(end+1,:) = x1Fit(ts1)
+XSS2(end+1,:) = x2Fit(ts2)
+SPEEDS1(end+1,:) = v1Fit(ts1)
+SPEEDS2(end+1,:) = v2Fit(ts2)
+ACC1(end+1,:) = ddRfun(betaX1,ts1)
+ACC2(end+1,:) = ddRfun(betaX2,ts2)
 
 %% x,y plot
 figure
@@ -99,20 +166,6 @@ plot(ts1,Rfun(betaX1,ts1))
 plot(ts2,Rfun(betaX2,ts2))
 legend('Path 1','Path 2','Fit 1','Fit 2')
 
-%% t,deltadeltax plot
-figure
-hold on 
-title(['2XResiduel as function of time'])
-xlabel('t [s]')
-ylabel('"X\Deltax [m]')
-set(gca,'fontsize',15)
-plot(t1,x1-x1Fit(t1),'.')
-plot(t2,x2-x2Fit(t2),'.')
-legend('Path 1','Path 2')
-figure 
-hold on
-histogram(x1-x1Fit(t1))
-histogram(x2-x2Fit(t2))
 
 %% t,x plot
 figure
@@ -137,8 +190,11 @@ ylabel('v [m/s]')
 set(gca,'fontsize',15)
 plot(x1Fit(ts1),v1Fit(ts1))
 plot(x2Fit(ts2),v2Fit(ts2))
+plot(Xs(1:59),vs(1:59))
+plot(Xs(61:end),vs(61:end))
 
-legend('Fit 1','Fit 2')
+
+legend('Fit 1','Fit 2','Model 1','Model 2')
 
 %% x,a plot
 figure
@@ -149,7 +205,12 @@ ylabel('a [m/s^2]')
 set(gca,'fontsize',15)
 plot(x1Fit(ts1),ddRfun(betaX1,ts1))
 plot(x2Fit(ts2),ddRfun(betaX2,ts2))
-legend('Fit 1','Fit 2')
+plot(x1Fit(ts1),accFun(x1Fit(ts1)),'.-')
+plot(x1Fit(ts1),accFun_back(x2Fit(ts2)),'.-')
+plot(Xs(1:59),as(1:59),'.')
+plot(Xs(61:end),as(61:end),'.')
+
+legend('Fit 1','Fit 2','Model 1','Model 2','num mod 1','num mod 1')
 
 
 %% x,alpha plot
@@ -179,6 +240,7 @@ beta = nlinfit(edges,N,gauss,[max(N),0,2])
 plot(edges,gauss(beta,edges))
 legend('Alpha his',['Gausfit \alpha = ',num2str(beta(2))])
  
+end
 end
 % figure
 % hold on 
@@ -222,3 +284,61 @@ ci = nlparci(beta,R,'jacobian',J);
 alp = beta(2)
 alpUs = norm((ci(2,1)-ci(2,2)))/2
 legend('Alpha his',['mean \alpha = ',num2str(alphaFound)],['gausfit \alpha = ',num2str(beta(2)),'+-',num2str(alpUs)])
+
+
+
+%%
+figure
+Alpha = -(as(62:end)-flip(as(1:59)))./(flip(vs(1:59))-vs(62:end));
+plot(Alpha)
+%%
+figure
+plot(vs(62:end))
+hold on
+plot(flip(vs(1:59)))
+
+figure
+plot(as(62:end))
+hold on
+plot(flip(as(1:59)))
+%%
+figure
+plot(vs(62:end))
+hold on
+plot(flip(vs(1:59)))
+
+figure
+plot(as(62:end))
+hold on
+plot(flip(as(1:59)))
+%%
+mean_speed1 = mean(SPEEDS1)
+mean_speed2 = mean(SPEEDS2)
+mean_acc1 = mean(ACC1)
+mean_acc2 = mean(ACC2)
+mean_x1 = mean(XSS1)
+mean_x2 = mean(XSS2)
+figure
+plot(mean_speed1)
+hold on
+plot(Xs(62:end),vs(62:end),'-.')
+plot(flip(Xs(1:59)),flip(vs(1:59)),'-.')
+plot(mean_speed2)
+
+figure
+plot(mean_acc1)
+hold on
+plot(mean_acc2)
+plot(as(62:end),'-.')
+plot(flip(as(1:59)),'-.')
+
+%%
+
+function dDat = diffFun(t,dat,accFun,alpha)
+x = dat(1);
+v = dat(2);
+dxdt = v;
+dvdt = accFun(x)-alpha*v;
+dDat = [dxdt;dvdt];
+end
+
