@@ -1,6 +1,8 @@
-clc; clear all; close all;
+clc; clear all; %close all;
 %%
-alphaSet = 0.10;
+alphaFundet = [];
+for hejIndex = 1:10
+alphaSet = 0.20;
 stoj = 1e-3;
 
 l = 0.6;
@@ -9,7 +11,7 @@ v0 = 2.3
 accWidth = 1
 changeInAcc = 0.01
 acc_n = 5
-ns = 5:9;
+ns = 5:11;
 number_ofmeasurements = 1;
 
 T = 0.2500;
@@ -121,111 +123,111 @@ Alpha = -(ddRfun(betaX1,ts1)-ddRfun(betaX2,ts2))./(v1Fit(ts1)-v2Fit(ts2));
 lenA = length(Alpha);
 ALPHA = Alpha(lenA/10:(end-lenA/10));
 alpha(end+1,:)=ALPHA;
-
-%% x,y plot
-figure
-hold on 
-title(['Path on table '])
-xlabel('x [m]')
-ylabel('y [m]')
-set(gca,'fontsize',15)
-plot(x1,y1,'.')
-plot(x2,y2,'.')
-plot(x1Fit(t1),y1)
-plot(x2Fit(t2),y2)
-
-% plot(Rfun(betaX1,ts1),Rfun(betaY1,ts1))
-% % plot(Rfun(betaX2,ts2),Rfun(betaY2,ts2))
-% plot(Rfun(betaX2,t2Adapted),Rfun(betaY2,t2Adapted))
-legend('Path 1','Path 2','Fit 1','Fit 2')
-
-%% t,deltax plot
-figure
-hold on 
-title(['Residuel as function of time'])
-xlabel('t [s]')
-ylabel('\Deltax [m]')
-set(gca,'fontsize',15)
-plot(t1,x1-linFun(linBetaX1,t1),'.')
-plot(t2,x2-linFun(linBetaX2,t2),'.')
-plot(ts1,Rfun(betaX1,ts1))
-plot(ts2,Rfun(betaX2,ts2))
-legend('Path 1','Path 2','Fit 1','Fit 2')
-
-
-%% t,x plot
-figure
-hold on 
-title(['Positions as function of time'])
-xlabel('t [s]')
-ylabel('x [m]')
-set(gca,'fontsize',15)
-plot(t1,x1,'.')
-plot(t2,x2,'.')
-plot(ts1,x1Fit(ts1))
-plot(ts2,x2Fit(ts2))
-legend('Path 1','Path 2','Fit 1','Fit 2')
-
-
-%% x,v plot
-figure
-hold on 
-title(['Speed as function of position'])
-xlabel('x [m]')
-ylabel('v [m/s]')
-set(gca,'fontsize',15)
-plot(x1Fit(ts1),v1Fit(ts1))
-plot(x2Fit(ts2),v2Fit(ts2))
-plot(Xs(1:59),vs(1:59))
-plot(Xs(61:end),vs(61:end))
-
-
-legend('Fit 1','Fit 2','Model 1','Model 2')
-
-%% x,a plot
-figure
-hold on 
-title(['Acceleration as function of position'])
-xlabel('x [m]')
-ylabel('a [m/s^2]')
-set(gca,'fontsize',15)
-plot(x1Fit(ts1),ddRfun(betaX1,ts1))
-plot(x2Fit(ts2),ddRfun(betaX2,ts2))
-plot(x1Fit(ts1),accFun(x1Fit(ts1)),'.-')
-plot(x1Fit(ts1),accFun_back(x2Fit(ts2)),'.-')
-plot(Xs(1:59),as(1:59),'.')
-plot(Xs(61:end),as(61:end),'.')
-
-legend('Fit 1','Fit 2','Model 1','Model 2','num mod 1','num mod 1')
-
-
-%% x,alpha plot
-xs = x1Fit(ts1);
-XS = xs(lenA/10:(end-lenA/10));
-figure
-hold on 
-title(['Alpha as function of position'])
-xlabel('x [m]')
-ylabel('\alpha [1/s]')
-set(gca,'fontsize',15)
-% plot(Rfun(betaX1,ts1),Alpha)
-plot(XS,ALPHA)
-
-%% alpha histogram
-figure
-hold on 
-title(['Histogram of Alpha'])
-xlabel('\alpha [1/s]')
-set(gca,'fontsize',15)
-histogram(ALPHA,100)
-[N,E] = histcounts(ALPHA,100)
-edges = E(1:(end-1))+diff(E)/2
-plot(edges,N,'.')
-gauss = @(beta,x) beta(1).*exp(-((x-beta(2))./beta(3)).^2./2)
-beta = nlinfit(edges,N,gauss,[max(N),0,2])
-plot(edges,gauss(beta,edges))
-legend('Alpha his',['Gausfit \alpha = ',num2str(beta(2))])
- 
+% 
+% %% x,y plot
+% figure
+% hold on 
+% title(['Path on table '])
+% xlabel('x [m]')
+% ylabel('y [m]')
+% set(gca,'fontsize',15)
+% plot(x1,y1,'.')
+% plot(x2,y2,'.')
+% plot(x1Fit(t1),y1)
+% plot(x2Fit(t2),y2)
+% 
+% % plot(Rfun(betaX1,ts1),Rfun(betaY1,ts1))
+% % % plot(Rfun(betaX2,ts2),Rfun(betaY2,ts2))
+% % plot(Rfun(betaX2,t2Adapted),Rfun(betaY2,t2Adapted))
+% legend('Path 1','Path 2','Fit 1','Fit 2')
+% 
+% %% t,deltax plot
+% figure
+% hold on 
+% title(['Residuel as function of time'])
+% xlabel('t [s]')
+% ylabel('\Deltax [m]')
+% set(gca,'fontsize',15)
+% plot(t1,x1-linFun(linBetaX1,t1),'.')
+% plot(t2,x2-linFun(linBetaX2,t2),'.')
+% plot(ts1,Rfun(betaX1,ts1))
+% plot(ts2,Rfun(betaX2,ts2))
+% legend('Path 1','Path 2','Fit 1','Fit 2')
+% 
+% 
+% %% t,x plot
+% figure
+% hold on 
+% title(['Positions as function of time'])
+% xlabel('t [s]')
+% ylabel('x [m]')
+% set(gca,'fontsize',15)
+% plot(t1,x1,'.')
+% plot(t2,x2,'.')
+% plot(ts1,x1Fit(ts1))
+% plot(ts2,x2Fit(ts2))
+% legend('Path 1','Path 2','Fit 1','Fit 2')
+% 
+% 
+% %% x,v plot
+% figure
+% hold on 
+% title(['Speed as function of position'])
+% xlabel('x [m]')
+% ylabel('v [m/s]')
+% set(gca,'fontsize',15)
+% plot(x1Fit(ts1),v1Fit(ts1))
+% plot(x2Fit(ts2),v2Fit(ts2))
+% plot(Xs(1:59),vs(1:59))
+% plot(Xs(61:end),vs(61:end))
+% 
+% 
+% legend('Fit 1','Fit 2','Model 1','Model 2')
+% 
+% %% x,a plot
+% figure
+% hold on 
+% title(['Acceleration as function of position'])
+% xlabel('x [m]')
+% ylabel('a [m/s^2]')
+% set(gca,'fontsize',15)
+% plot(x1Fit(ts1),ddRfun(betaX1,ts1))
+% plot(x2Fit(ts2),ddRfun(betaX2,ts2))
+% plot(x1Fit(ts1),accFun(x1Fit(ts1)),'.-')
+% plot(x1Fit(ts1),accFun_back(x2Fit(ts2)),'.-')
+% plot(Xs(1:59),as(1:59),'.')
+% plot(Xs(61:end),as(61:end),'.')
+% 
+% legend('Fit 1','Fit 2','Model 1','Model 2','num mod 1','num mod 1')
+% 
+% 
+% %% x,alpha plot
+% xs = x1Fit(ts1);
+% XS = xs(lenA/10:(end-lenA/10));
+% figure
+% hold on 
+% title(['Alpha as function of position'])
+% xlabel('x [m]')
+% ylabel('\alpha [1/s]')
+% set(gca,'fontsize',15)
+% % plot(Rfun(betaX1,ts1),Alpha)
+% plot(XS,ALPHA)
+% 
+% %% alpha histogram
+% figure
+% hold on 
+% title(['Histogram of Alpha'])
+% xlabel('\alpha [1/s]')
+% set(gca,'fontsize',15)
+% histogram(ALPHA,100)
+% [N,E] = histcounts(ALPHA,100)
+% edges = E(1:(end-1))+diff(E)/2
+% plot(edges,N,'.')
+% gauss = @(beta,x) beta(1).*exp(-((x-beta(2))./beta(3)).^2./2)
+% beta = nlinfit(edges,N,gauss,[max(N),0,2])
+% plot(edges,gauss(beta,edges))
+% legend('Alpha his',['Gausfit \alpha = ',num2str(beta(2))])
+%  
 end
 end
 % figure
@@ -271,8 +273,10 @@ alp = beta(2)
 alpUs = norm((ci(2,1)-ci(2,2)))/2
 legend('Alpha his',['mean \alpha = ',num2str(alphaFound)],['gausfit \alpha = ',num2str(beta(2)),'+-',num2str(alpUs)])
 
-
-
+alphaFundet(end+1) = alp;
+end
+figure
+histogram(alphaFundet)
 function dDat = diffFun(t,dat,accFun,alpha)
 x = dat(1);
 v = dat(2);
